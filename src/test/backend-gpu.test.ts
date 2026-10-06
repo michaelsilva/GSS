@@ -843,7 +843,7 @@ it("the playground renders with WebGPU and displays WGSL", async () => {
 // to a silhouette it narrowly misses. auto remains the hard, existing edge.
 describe("shape-rendering: geometricPrecision", () => {
   const scene = (value: "auto" | "geometricPrecision") =>
-    `@scene { sphere; } scene { shape-rendering: ${value}; dpr: 1; floor: none; background: #000000; camera-target: 0 0 0; camera-angle: 0deg 0deg; camera-distance: 5; ambient: 1; light: none; } sphere { radius: 1; color: #ffffff; }`;
+    `@scene { sphere; } scene { shape-rendering: ${value}; dpr: 1; floor: none; background: #000000; camera-target: 0 0 0; camera-angle: 0deg 0deg; camera-distance: 5; ambient: 1; } sphere { radius: 1; color: #ffffff; }`;
 
   it("adds coverage only to grazing edge pixels, on WebGL2 and WebGPU", async () => {
     const plain = await render(scene("auto"));
