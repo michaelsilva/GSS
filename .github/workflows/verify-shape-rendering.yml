@@ -19,4 +19,5 @@ jobs:
       - run: npm run build:lib
       - run: npx vitest run src/compiler/features/shape-rendering.test.ts
       - run: npx playwright install --with-deps chromium
-      - run: npx vitest run src/test/backend-gpu.test.ts -t 'shape-rendering: geometricPrecision'
+      - run: |
+          npx vitest run src/test/backend-gpu.test.ts -t "shape-rendering: geometricPrecision"
