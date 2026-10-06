@@ -8,7 +8,7 @@ export function precisionMarch(
 ): string {
   // The scene-sphere fast path returns the exact hit/miss and no grazing edge.
   const miss = sceneSphereCode.replace(
-    /return vec2\\(([^\\n]+)\\);/g,
+    /return vec2\(([^\n]+)\);/g,
     "return vec4($1, 0.0, 0.0);",
   );
   const distance = masked || transparent ? "abs(res.x)" : "res.x";
