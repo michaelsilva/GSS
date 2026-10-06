@@ -278,8 +278,12 @@ export function generateShader(
   // A blend set from JS: how far it reaches is not known, nor the sphere of the scene
   const known = spheres.every((s): s is Sphere => s !== null) && spheres.length > 0 && !blends.some(isLive);
   const scene = known ? enclosing(spheres as Sphere[]) : null;
+  const sceneRadius = scene ? scene.radius + maxBlend + 0.01 : 0;
   const sceneSphereCode = scene
-    ? sceneMiss(scene.center, scene.radius + maxBlend + 0.01, hasFloor)
+    ? sceneMiss(scene.center, sceneRadius, hasFloor)
+    : "";
+  const precisionSceneSphereCode = scene
+    ? sceneMiss(scene.center, sceneRadius, hasFloor, true)
     : "";
   // The sun, the ambient light and the lights of @scene; null for the white sun of always
   // shadows (decision 115): through the holes of mask-image too
@@ -344,7 +348,7 @@ export function generateShader(
   const rendered = geometricPrecision
     ? layered.replace(
         "\nvec3 calcNormal(vec3 p) {",
-        `\n${precisionMarch(sceneSphereCode, masked.length > 0, transparent.length > 0)}\n\nvec3 calcNormal(vec3 p) {`,
+        `\n${precisionMarch(precisionSceneSphereCode, masked.length > 0, transparent.length > 0)}\n\nvec3 calcNormal(vec3 p) {`,
       )
     : layered;
   const template = distanceView ? withObjectsAlone(rendered) : rendered;
