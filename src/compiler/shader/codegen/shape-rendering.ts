@@ -6,23 +6,8 @@ export function precisionMarch(
   masked: boolean,
   transparent: boolean,
 ): string {
-  // The scene-sphere fast path returns the exact hit/miss and no grazing edge.
-  const miss = sceneSphereCode
-    .replace(
-      /return vec2\(([^\n]+)\);/g,
-      "return vec4($1, 0.0, 0.0);",
-    )
-    // The ordinary fast reject is exact-hit tight. A grazing ray may pass outside it by
-    // one pixel and still contribute coverage, so widen only this test by that footprint.
-    .replace(
-      /  float c = dot\(oc, oc\) - ([^;]+);/,
-      [
-        "  float baseRadius = sqrt($1);",
-        "  float closestT = max(-b / dot(rd, rd), 0.0);",
-        "  float precisionRadius = baseRadius + closestT * pixelSize;",
-        "  float c = dot(oc, oc) - precisionRadius * precisionRadius;",
-      ].join("\n"),
-    );
+  // The scene-sphere fast path is already widened by one pixel for this mode.
+  const miss = sceneSphereCode;
   const distance = masked || transparent ? "abs(res.x)" : "res.x";
 
   const edge = masked
