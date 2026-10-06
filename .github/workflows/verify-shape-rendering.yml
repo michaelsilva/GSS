@@ -1,0 +1,21 @@
+name: Verify geometricPrecision draft
+
+on:
+  push:
+    branches:
+      - ci/verify-shape-rendering-geometric-precision
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run --exclude '**/*gpu.test.ts'
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:gpu
