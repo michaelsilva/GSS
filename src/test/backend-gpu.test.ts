@@ -850,14 +850,44 @@ describe("shape-rendering: geometricPrecision", () => {
     const precise = await render(scene("geometricPrecision"));
     const center = (36 * 96 + 48) * 4;
 
-    for (const [auto, smooth] of [[plain.gl, precise.gl], [plain.gpu, precise.gpu]]) {
-      let covered = 0;
-      for (let i = 0; i < auto.length; i += 4) {
-        if (auto[i] <= 4 && smooth[i] > 4 && smooth[i] < 251) covered++;
-      }
-      expect(covered).toBeGreaterThan(4);
-      expect(Math.abs(smooth[center] - auto[center])).toBeLessThanOrEqual(2);
-      expect(smooth[center]).toBeGreaterThan(250);
+    const stats = [["webgl", plain.gl, precise.gl], ["webgpu", plain.gpu, precise.gpu]].map(
+      ([backend, auto, smooth]) => {
+        let covered = 0;
+        let changed = 0;
+        let newNonBlack = 0;
+        let fullFromBlack = 0;
+        let minNew = 255;
+        let maxNew = 0;
+        for (let i = 0; i < (auto as Uint8Array).length; i += 4) {
+          const a = (auto as Uint8Array)[i];
+          const s = (smooth as Uint8Array)[i];
+          if (a !== s) changed++;
+          if (a <= 4 && s > 4) {
+            newNonBlack++;
+            minNew = Math.min(minNew, s);
+            maxNew = Math.max(maxNew, s);
+            if (s < 251) covered++;
+            else fullFromBlack++;
+          }
+        }
+        return {
+          backend,
+          covered,
+          changed,
+          newNonBlack,
+          fullFromBlack,
+          minNew: newNonBlack ? minNew : null,
+          maxNew: newNonBlack ? maxNew : null,
+          autoCenter: (auto as Uint8Array)[center],
+          smoothCenter: (smooth as Uint8Array)[center],
+        };
+      },
+    );
+    console.log("geometricPrecision diagnostic", JSON.stringify(stats));
+    for (const stat of stats) {
+      expect(stat.covered).toBeGreaterThan(4);
+      expect(Math.abs(stat.smoothCenter - stat.autoCenter)).toBeLessThanOrEqual(2);
+      expect(stat.smoothCenter).toBeGreaterThan(250);
     }
   }, 60000);
 });
