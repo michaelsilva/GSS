@@ -66,13 +66,22 @@ ${edge}
   }`;
 
   return `// shape-rendering: geometricPrecision — the primary ray keeps its closest near miss
-vec4 marchPrecision(vec3 ro, vec3 rd) {
+struct PrecisionHit {
+  float t;
+  float id;
+  float edgeT;
+  float edgeId;
+  float coverage;
+};
+
+PrecisionHit marchPrecision(vec3 ro, vec3 rd) {
   float t = 0.0;
   float id = 0.0;
   float edgeT = 0.0;
+  float edgeId = 0.0;
   float coverage = 0.0;
   float pixelSize = 1.0 / (1.5 * iResolution.y);
 ${miss}${loop}
-  return vec4(t, id, edgeT, coverage);
+  return PrecisionHit(t, id, edgeT, edgeId, coverage);
 }`;
 }
