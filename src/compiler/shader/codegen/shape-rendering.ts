@@ -7,7 +7,11 @@ export function precisionMarch(
   transparent: boolean,
 ): string {
   // The scene-sphere fast path is already widened by one pixel for this mode.
-  const miss = sceneSphereCode;
+  // It is generated as a four-value early return; add the saved edge-id slot here.
+  const miss = sceneSphereCode.replace(
+    /return vec4\\(([^;]+)\\);/g,
+    "return PrecisionHit($1, 0.0);",
+  );
   const distance = masked || transparent ? "abs(res.x)" : "res.x";
 
   const edge = masked
@@ -16,6 +20,7 @@ export function precisionMarch(
       float here = 1.0 - d / width;
       if (here > coverage && maskAlpha(id, p) >= 0.5) {
         edgeT = t;
+        edgeId = id;
         coverage = here;
       }
     }`
@@ -24,6 +29,7 @@ export function precisionMarch(
       float here = 1.0 - d / width;
       if (here > coverage) {
         edgeT = t;
+        edgeId = id;
         coverage = here;
       }
     }`;
