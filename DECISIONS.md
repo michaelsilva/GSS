@@ -1109,3 +1109,13 @@ The two columns stay while the reader types, so the window does not jump at the 
 **Why**: a language without a readable source is hard to trust or adopt, and the license (Apache-2.0) already gave the code to everyone through npm. A text link where the bar has room, as Vite, Svelte and Tailwind do; the mark alone where it has none.
 **Accepted limits**: no star count: a number fetched from the GitHub API on each visit, and 0 on the first day. npm shows the link from the next published version, the registries from the next version of the extension. The `video/` folder (the sources of the launch films) is removed from the repository and from its history before it opens.
 
+## 139. `shape-rendering: geometricPrecision` smooths silhouettes from the primary ray
+
+**Decision**: a scene can opt into `shape-rendering: geometricPrecision`. `auto`, the default, keeps the shader of existing scenes unchanged. Geometric precision does not supersample, enlarge the backing store, cast another camera ray or add a rendering pass. The primary ray keeps the closest point where the distance to the nearest surface is smaller than that ray's pixel width (`t * pixelSize`) without being a hit. If the ray later misses, or reaches a farther surface, that saved point is shaded once and mixed over what the ray saw by its coverage.
+
+The whole-scene bounding sphere keeps its fast miss, but in geometric-precision mode it only returns early when the ray passes more than one pixel width outside that bound; otherwise the ray continues so the optimization cannot erase a grazing silhouette. The normal `march()` remains the path for `auto`, reflections, picking and the other places that already call it. Both GLSL and WGSL use the same generated path.
+
+**Why**: WebGL canvas MSAA only antialiases the full-screen triangle, not the procedural SDF silhouettes drawn inside its fragment shader. Supersampling or several camera rays would multiply the cost and memory of the whole image. The ray already has the distance samples needed to estimate a silhouette's subpixel coverage, so the extra shading is confined to a grazing edge.
+
+**Accepted limits**: this smooths silhouettes, not every high-frequency detail inside a material or texture. Its coverage is an estimate from the ray's closest sampled distance, not multisample coverage. `auto` remains the compatibility path for scenes that want the exact previous image.
+
