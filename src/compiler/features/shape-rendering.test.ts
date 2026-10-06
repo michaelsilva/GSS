@@ -11,13 +11,17 @@ describe("shape-rendering", () => {
     expect(compileGSS(`${SPHERE} scene { shape-rendering: auto; }`)).toBe(plain);
   });
 
-  it("geometricPrecision keeps a grazing point on the primary ray", () => {
+  it("geometricPrecision keeps a grazing point and its object on the primary ray", () => {
     const shader = compileGSS(
       `${SPHERE} scene { shape-rendering: geometricPrecision; }`,
     );
     expect(shader).toContain("PrecisionHit marchPrecision(vec3 ro, vec3 rd)");
     expect(shader).toContain("float pixelSize = 1.0 / (1.5 * iResolution.y);");
-    expect(shader).toContain("if (d >= 0.001 && d < width)");\n    expect(shader).toContain("float precisionRadius = baseRadius + closestT * pixelSize;");\n    expect(shader).toContain("float boundWidth = max(-b, 0.0) * pixelSize;");\n    expect(shader).toContain("c - b * b >");
+    expect(shader).toContain("if (d >= 0.001 && d < width)");
+    expect(shader).toContain("edgeId = id;");
+    expect(shader).toContain("float boundWidth = max(-b, 0.0) * pixelSize;");
+    expect(shader).toContain("c - b * b >");
+    expect(shader).toContain("return PrecisionHit(");
     expect(shader).toContain("vec3 edgeColor = shadeSurface(ro, rd, edgeT, edgeId);");
     expect(shader).toContain("col = mix(col, edgeColor, edgeCoverage);");
   });
@@ -27,8 +31,10 @@ describe("shape-rendering", () => {
       `${SPHERE} scene { shape-rendering: geometricPrecision; }`,
       { target: "dual" },
     );
+    expect(wgsl).toContain("struct g_PrecisionHit");
     expect(wgsl).toContain("fn g_marchPrecision(");
-    expect(wgsl).toContain("g_PrecisionHit");\n    expect(wgsl).toContain("g_edgeCoverage");
+    expect(wgsl).toContain("g_edgeId");
+    expect(wgsl).toContain("g_edgeCoverage");
   });
 
   it("follows @media like every scene property", () => {
