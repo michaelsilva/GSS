@@ -357,9 +357,8 @@ export function generateShader(
   const edgeBlend = geometricPrecision
     ? `  if (edgeCoverage > 0.0 && edgeT < t) {
     vec3 edgePoint = ro + rd * edgeT;
-    vec2 edgeHit = map(edgePoint);
-    vec3 edgeColor = shadeSurface(ro, rd, edgeT, edgeHit.y);
-    col = mix(col, edgeColor, ${transparent.length > 0 ? "edgeCoverage * surfaceAlpha(edgeHit.y, edgePoint)" : "edgeCoverage"});
+    vec3 edgeColor = shadeSurface(ro, rd, edgeT, edgeId);
+    col = mix(col, edgeColor, ${transparent.length > 0 ? "edgeCoverage * surfaceAlpha(edgeId, edgePoint)" : "edgeCoverage"});
   }
 `
     : "";
@@ -400,7 +399,7 @@ export function generateShader(
       .replace(
         "  vec2 hit = march(ro, rd);\n  float t = hit.x;\n  float id = hit.y;/*@PICK_OUTPUT*/",
         geometricPrecision
-          ? "  vec4 hit = marchPrecision(ro, rd);\n  float t = hit.x;\n  float id = hit.y;/*@PICK_OUTPUT*/\n  float edgeT = hit.z;\n  float edgeCoverage = hit.w;"
+          ? "  PrecisionHit hit = marchPrecision(ro, rd);\n  float t = hit.t;\n  float id = hit.id;/*@PICK_OUTPUT*/\n  float edgeT = hit.edgeT;\n  float edgeId = hit.edgeId;\n  float edgeCoverage = hit.coverage;"
           : "  vec2 hit = march(ro, rd);\n  float t = hit.x;\n  float id = hit.y;/*@PICK_OUTPUT*/",
       )
       .replace("/*@TEXTURE_UNIFORMS*/", textures.uniforms)
