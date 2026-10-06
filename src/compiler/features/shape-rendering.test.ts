@@ -17,7 +17,7 @@ describe("shape-rendering", () => {
     );
     expect(shader).toContain("vec4 marchPrecision(vec3 ro, vec3 rd)");
     expect(shader).toContain("float pixelSize = 1.0 / (1.5 * iResolution.y);");
-    expect(shader).toContain("if (d >= 0.001 && d < width)");
+    expect(shader).toContain("if (d >= 0.001 && d < width)");\n    expect(shader).toContain("float boundWidth = max(-b, 0.0) * pixelSize;");\n    expect(shader).toContain("c - b * b >");
     expect(shader).toContain("vec3 edgeColor = shadeSurface(ro, rd, edgeT, edgeHit.y);");
     expect(shader).toContain("col = mix(col, edgeColor, edgeCoverage);");
   });
