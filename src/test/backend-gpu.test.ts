@@ -839,6 +839,29 @@ it("the playground renders with WebGPU and displays WGSL", async () => {
 }, 60000);
 
 
+// shape-rendering: geometricPrecision (#2): the same primary ray gives partial coverage
+// to a silhouette it narrowly misses. auto remains the hard, existing edge.
+describe("shape-rendering: geometricPrecision", () => {
+  const scene = (value: "auto" | "geometricPrecision") =>
+    `@scene { sphere; } scene { shape-rendering: ${value}; dpr: 1; floor: none; background: #000000; camera-target: 0 0 0; camera-angle: 0deg 0deg; camera-distance: 5; ambient: 1; light: none; } sphere { radius: 1; color: #ffffff; }`;
+
+  it("adds coverage only to grazing edge pixels, on WebGL2 and WebGPU", async () => {
+    const plain = await render(scene("auto"));
+    const precise = await render(scene("geometricPrecision"));
+    const center = (36 * 96 + 48) * 4;
+
+    for (const [auto, smooth] of [[plain.gl, precise.gl], [plain.gpu, precise.gpu]]) {
+      let covered = 0;
+      for (let i = 0; i < auto.length; i += 4) {
+        if (auto[i] <= 4 && smooth[i] > 4 && smooth[i] < 251) covered++;
+      }
+      expect(covered).toBeGreaterThan(4);
+      expect(Math.abs(smooth[center] - auto[center])).toBeLessThanOrEqual(2);
+      expect(smooth[center]).toBeGreaterThan(250);
+    }
+  }, 60000);
+});
+
 // view: distance (decision 131): the isolines of the distance to the objects, over the scene
 describe("view: distance draws the isolines over the scene, on both backends", () => {
   // The test of the playground above leaves the page of these tests: back to it
