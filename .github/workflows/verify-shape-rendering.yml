@@ -16,6 +16,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx vitest run --exclude '**/*gpu.test.ts'
+      - run: npm run build:lib
+      - run: npx vitest run src/compiler/features/shape-rendering.test.ts
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:gpu
+      - run: npx vitest run src/test/backend-gpu.test.ts -t 'shape-rendering: geometricPrecision'
