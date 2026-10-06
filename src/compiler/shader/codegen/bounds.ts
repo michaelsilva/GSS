@@ -179,28 +179,42 @@ export function sceneMiss(
   geometricPrecision = false,
 ): string {
   const r = Math.ceil(radius * 1000) / 1000; // rounded up: never smaller
-  const extra = geometricPrecision ? ", 0.0, 0.0" : "";
-  const type = geometricPrecision ? "vec4" : "vec2";
+
+  // auto keeps the generated shader byte-for-byte as it was before shape-rendering.
+  if (!geometricPrecision) {
+    const hit = floor
+      ? [
+          "    float floorT = rd.y < 0.0 ? -ro.y / rd.y : 1e10;",
+          "    return vec2(floorT < MAX_DIST ? floorT : MAX_DIST + 1.0, 0.0);",
+        ]
+      : ["    return vec2(MAX_DIST + 1.0, 0.0);"];
+    return [
+      "  // A ray that passes by the sphere around every object, at every moment of",
+      "  // their animations, meets no object: only the floor is left, found at once",
+      `  vec3 oc = ro - ${vec3(center.map((c) => Math.round(c * 10000) / 10000))};`,
+      "  float b = dot(oc, rd);",
+      `  float c = dot(oc, oc) - ${glslFloat(Math.round(r * r * 10000) / 10000 + 0.001)};`,
+      `  if (${floor ? "ro.y > 0.0 && " : ""}c > 0.0 && (b > 0.0 || b * b < c * dot(rd, rd))) {`,
+      ...hit,
+      "  }",
+      "",
+    ].join("\n");
+  }
+
   const hit = floor
     ? [
         "    float floorT = rd.y < 0.0 ? -ro.y / rd.y : 1e10;",
-        `    return ${type}(floorT < MAX_DIST ? floorT : MAX_DIST + 1.0, 0.0${extra});`,
+        "    return vec4(floorT < MAX_DIST ? floorT : MAX_DIST + 1.0, 0.0, 0.0, 0.0);",
       ]
-    : [`    return ${type}(MAX_DIST + 1.0, 0.0${extra});`];
-  const miss = geometricPrecision
-    ? [
-        "  // Keep rays within one pixel of the bound: they can still graze a silhouette.",
-        "  float boundWidth = max(-b, 0.0) * pixelSize;",
-        `  bool misses = b > 0.0 || c - b * b > 2.0 * ${glslFloat(r)} * boundWidth + boundWidth * boundWidth;`,
-      ]
-    : ["  bool misses = b > 0.0 || b * b < c * dot(rd, rd);"];
+    : ["    return vec4(MAX_DIST + 1.0, 0.0, 0.0, 0.0);"];
   return [
-    "  // A ray that passes by the sphere around every object, at every moment of",
-    "  // their animations, meets no object: only the floor is left, found at once",
+    "  // A ray farther than one pixel from the sphere around every object cannot",
+    "  // graze a silhouette: only the floor is left, found at once.",
     `  vec3 oc = ro - ${vec3(center.map((c) => Math.round(c * 10000) / 10000))};`,
     "  float b = dot(oc, rd);",
     `  float c = dot(oc, oc) - ${glslFloat(Math.round(r * r * 10000) / 10000 + 0.001)};`,
-    ...miss,
+    "  float boundWidth = max(-b, 0.0) * pixelSize;",
+    `  bool misses = b > 0.0 || c - b * b > 2.0 * ${glslFloat(r)} * boundWidth + boundWidth * boundWidth;`,
     `  if (${floor ? "ro.y > 0.0 && " : ""}c > 0.0 && misses) {`,
     ...hit,
     "  }",
