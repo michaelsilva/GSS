@@ -50,7 +50,9 @@ import { liveLight, liveRead } from "./properties";
 import { DIFFUSE, isLight, lightingCode, splitAmbient } from "./lights";
 import { readShadows } from "./shadows";
 import { ISOLINES, ISOLINES_CALL, withObjectsAlone } from "./view";
-import type { View } from "../../features/view";\nimport { readShapeRendering } from "../../features/shape-rendering";\nimport { precisionMarch } from "./shape-rendering";
+import type { View } from "../../features/view";
+import { readShapeRendering } from "../../features/shape-rendering";
+import { precisionMarch } from "./shape-rendering";
 
 export { activeSlots, hoverSlots } from "./animation";
 export { shapeNames, shapeRadius } from "./shapes";
@@ -107,7 +109,8 @@ export function generateShader(
     floorStyle[0].type === "IDENT" &&
     floorStyle[0].value === "none"
   );
-  const distanceView = view === "distance";\n  const geometricPrecision = readShapeRendering(sceneStyles) === "geometricPrecision";
+  const distanceView = view === "distance";
+  const geometricPrecision = readShapeRendering(sceneStyles) === "geometricPrecision";
   const nearest =
     hasFloor && !distanceView && instances.every(plainUnion) ? "min(res.x, p.y)" : "res.x";
 
